@@ -1,4 +1,4 @@
-import { EnumOrderStatus, EnumPaymentStatus } from '../../utils/enums/enums';
+import { EnumOrdersStatus, EnumPaymentsStatus } from '../../utils/enums/enums';
 
 export class OrderItemResponseDto {
   product_id: string;
@@ -11,8 +11,8 @@ export class OrderResponseDto {
   user_id: string;
   items: OrderItemResponseDto[];
   total_amount: number;
-  status: EnumOrderStatus;
-  payment_status: EnumPaymentStatus;
+  status: EnumOrdersStatus;
+  payment_status: EnumPaymentsStatus;
   address_id: string;
   payment_id?: string;
   shipped_at?: Date;

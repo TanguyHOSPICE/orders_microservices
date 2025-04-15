@@ -1,4 +1,4 @@
-export enum EnumOrderStatus {
+export enum EnumOrdersStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
   PROCESSING = 'PROCESSING',
@@ -11,7 +11,7 @@ export enum EnumOrderStatus {
   RETURNED = 'RETURNED',
 }
 
-export enum EnumPaymentStatus {
+export enum EnumPaymentsStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
   FAILED = 'FAILED',
