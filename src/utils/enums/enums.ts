@@ -10,3 +10,10 @@ export enum EnumOrderStatus {
   RETURN_REQUESTED = 'RETURN_REQUESTED',
   RETURNED = 'RETURNED',
 }
+
+export enum EnumPaymentStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}
