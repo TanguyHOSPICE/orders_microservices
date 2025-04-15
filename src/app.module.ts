@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule, Schema } from '@nestjs/mongoose';
+import { OrdersModule } from './orders/orders/orders.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot(),
+    // Mongoose connection to the database with the DNS in the .env file
+    MongooseModule.forRoot(process.env.NOZAMA_ORDERS_DNS),
+    OrdersModule,
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
