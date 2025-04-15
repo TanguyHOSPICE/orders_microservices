@@ -32,7 +32,7 @@ export class Order {
   @Prop({
     type: String,
     enum: EnumOrdersStatus,
-    default: EnumOrdesrStatus.PENDING,
+    default: EnumOrdersStatus.PENDING,
   })
   status: EnumOrdersStatus;
 
