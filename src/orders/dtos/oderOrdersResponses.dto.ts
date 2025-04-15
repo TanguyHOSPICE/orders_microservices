@@ -19,6 +19,5 @@ export class OrderResponseDto {
   delivered_at?: Date;
   tracking_number?: string;
 
-  // Facultatif : seulement si on hydrate depuis un autre service
-  address?: any; // ou une structure typée d’adresse
+  address?: any; // Ref to address (microservice)
 }
