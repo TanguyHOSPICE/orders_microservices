@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { RpcExceptionsFilter } from './exceptions/rpc-exception.filter';
 
 async function bootstrap() {
   console.log('🚀- Orders microservice is Running');
@@ -13,6 +14,7 @@ async function bootstrap() {
       },
     },
   );
+  app.useGlobalFilters(new RpcExceptionsFilter()); // For ms exceptions
   await app.listen();
 }
 bootstrap();
