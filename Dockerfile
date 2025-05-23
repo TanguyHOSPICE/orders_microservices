@@ -1,5 +1,5 @@
 # Is the latest version of node.js
-FROM node:21.7.1
+FROM node:latest
 
 # Install pnpm globally
 RUN npm install -g pnpm 
