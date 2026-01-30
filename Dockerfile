@@ -1,13 +1,22 @@
-# Is the latest version of node.js
-FROM node:latest
+# Dockerfile.microservice (dev)
+FROM node:20-alpine
 
-# Install pnpm globally
-RUN npm install -g pnpm 
-# The WORKDIR instruction sets the working directory for any RUN, CMD, ENTRYPOINT, COPY and ADD instructions that follow it in the Dockerfile.
-  WORKDIR /usr/src/app
-# copy folders and files from the host to the container
-  COPY package.json pnpm-lock.yaml ./
-# Run the pnpm install in the container
-  RUN pnpm install
-# Copy the rest of the files to the container
-  COPY . .
+WORKDIR /usr/src/app
+
+# Copier package.json et lockfile
+COPY package.json pnpm-lock.yaml* ./
+
+# Installer pnpm
+RUN npm install -g pnpm
+
+# Installer les dépendances
+RUN pnpm install
+
+# Copier tout le code
+COPY . .
+
+# Exposer le port si nécessaire (optionnel, pour microservices HTTP)
+EXPOSE 3001
+
+# Lancer le service (à adapter selon ton script dev)
+CMD ["pnpm", "run", "dev"]
