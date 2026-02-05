@@ -3,20 +3,18 @@ FROM node:20-alpine
 # Installer les outils pour compiler les packages natifs
 RUN apk add --no-cache python3 g++ make git
 
-WORKDIR /usr/src/app
 
 # Installer pnpm globalement
-RUN npm install -g pnpm
+RUN npm install -g pnpm @nestjs/cli
 
-# Copier package.json et lockfile
-COPY package.json pnpm-lock.yaml* ./
+  WORKDIR /usr/src/app
 
 # Installer toutes les dépendances
-RUN pnpm install
+# Copier package.json et lockfile
+  COPY package.json pnpm-lock.yaml* ./
+
+  RUN pnpm install --frozen-lockfile
 
 # Copier tout le code
-COPY . .
+  COPY . .
 
-EXPOSE 3001
-
-CMD ["pnpm", "run", "start:dev"]
