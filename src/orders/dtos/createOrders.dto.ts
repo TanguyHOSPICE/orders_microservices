@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsMongoId,
+  IsNotEmpty,
   IsNumber,
   IsPositive,
   IsString,
@@ -10,6 +11,7 @@ import { Type } from 'class-transformer';
 
 export class OrderItemDto {
   @IsMongoId()
+  @IsNotEmpty()
   product_id: string;
 
   @IsNumber()
@@ -23,6 +25,7 @@ export class OrderItemDto {
 
 export class CreateOrderDto {
   @IsMongoId()
+  @IsNotEmpty()
   user_id: string;
 
   @IsArray()
@@ -30,12 +33,6 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 
-  @IsNumber()
-  total_amount: number;
-
-  @IsString()
+  @IsMongoId()
   address_id: string; // Ref to address (microservice)
-
-  @IsString()
-  payment_id?: string;
 }

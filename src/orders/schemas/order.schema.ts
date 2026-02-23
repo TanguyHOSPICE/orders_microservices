@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { EnumOrdersStatus, EnumPaymentsStatus } from '../../utils/enums/enums';
 
 export type OrderDocument = HydratedDocument<Order>;
@@ -7,7 +7,7 @@ export type OrderDocument = HydratedDocument<Order>;
 @Schema({ timestamps: true, versionKey: false })
 export class Order {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-  user_id: mongoose.Types.ObjectId;
+  user_id: Types.ObjectId;
 
   @Prop([
     {
@@ -21,7 +21,7 @@ export class Order {
     },
   ])
   items: {
-    product_id: mongoose.Types.ObjectId;
+    product_id: Types.ObjectId;
     quantity: number;
     price: number;
   }[];
