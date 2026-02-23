@@ -1,6 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
-import { EnumOrdersStatus, EnumPaymentsStatus } from '../../utils/enums/enums';
+import {
+  EnumCurrency,
+  EnumOrdersStatus,
+  EnumPaymentsStatus,
+} from '../../utils/enums/enums';
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -42,6 +46,8 @@ export class Order {
     default: EnumPaymentsStatus.PENDING,
   })
   payment_status: EnumPaymentsStatus;
+  @Prop({ enum: EnumCurrency, default: EnumCurrency.EUR })
+  currency: string;
 
   // 🏠 Ref to address  (microservice)
   @Prop({ type: String, required: true })
@@ -49,12 +55,21 @@ export class Order {
 
   @Prop()
   payment_id?: string;
+  // 🔹 Champs dates pour chaque status
+  @Prop({ type: Date }) pending_at?: Date;
+  @Prop({ type: Date }) confirmed_at?: Date;
+  @Prop({ type: Date }) processing_at?: Date;
+  @Prop({ type: Date }) shipped_at?: Date;
+  @Prop({ type: Date }) delivered_at?: Date;
+  @Prop({ type: Date }) cancelled_at?: Date;
+  @Prop({ type: Date }) refunded_at?: Date;
+  @Prop({ type: Date }) return_requested_at?: Date;
+  @Prop({ type: Date }) returned_at?: Date;
 
-  @Prop({ type: Date })
-  shipped_at?: Date;
-
-  @Prop({ type: Date })
-  delivered_at?: Date;
+  // 🔹 Paiement
+  @Prop({ type: Date }) paid_at?: Date;
+  @Prop({ type: Date }) payment_refunded_at?: Date;
+  @Prop({ type: Date }) payment_failed_at?: Date;
 
   @Prop({ type: String })
   tracking_number?: string;

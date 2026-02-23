@@ -17,3 +17,10 @@ export enum EnumPaymentsStatus {
   FAILED = 'FAILED',
   REFUNDED = 'REFUNDED',
 }
+export enum EnumCurrency {
+  USD = 'USD',
+  EUR = 'EUR',
+  GBP = 'GBP',
+  JPY = 'JPY',
+  ZH = 'ZH',
+}
