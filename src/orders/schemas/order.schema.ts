@@ -6,9 +6,11 @@ import {
   EnumPaymentsStatus,
 } from '../../utils/enums/enums';
 
-export type OrderDocument = HydratedDocument<Order>;
+export type OrderDocument = HydratedDocument<
+  Order & { createdAt: Date; updatedAt: Date }
+>;
 
-@Schema({ timestamps: true, versionKey: false })
+@Schema({ timestamps: true }) //delete , versionKey: false to use __v for versioning
 export class Order {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   user_id: Types.ObjectId;

@@ -24,3 +24,9 @@ export enum EnumCurrency {
   JPY = 'JPY',
   ZH = 'ZH',
 }
+export enum EnumRole {
+  ADMIN = 'ADMIN',
+  GUEST = 'GUEST',
+
+  USER = 'USER',
+}

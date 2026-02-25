@@ -20,6 +20,31 @@ export class OrdersService {
     private readonly orderModel: Model<Order>,
     @Inject('NATS_GATEWAY') private readonly nats: ClientProxy,
   ) {}
+  // Transition guard
+  // private isValidStatusTransition(
+  //   current: EnumOrdersStatus,
+  //   next: EnumOrdersStatus,
+  // ): boolean {
+  //   const transitions = {
+  //     [EnumOrdersStatus.PENDING]: [
+  //       EnumOrdersStatus.CONFIRMED,
+  //       EnumOrdersStatus.CANCELLED,
+  //     ],
+  //     [EnumOrdersStatus.CONFIRMED]: [
+  //       EnumOrdersStatus.PROCESSING,
+  //       EnumOrdersStatus.CANCELLED,
+  //     ],
+  //     [EnumOrdersStatus.PROCESSING]: [EnumOrdersStatus.SHIPPED],
+  //     [EnumOrdersStatus.SHIPPED]: [
+  //       EnumOrdersStatus.DELIVERED,
+  //       EnumOrdersStatus.RETURN_REQUESTED,
+  //     ],
+  //     [EnumOrdersStatus.DELIVERED]: [],
+  //     [EnumOrdersStatus.CANCELLED]: [],
+  //   };
+
+  //   return transitions[current]?.includes(next);
+  // }
 
   async createOrder({ user_id, items, address_id }: CreateOrderDto) {
     // Check if user exists
@@ -113,7 +138,25 @@ export class OrdersService {
     return orders;
   }
 
+  //   Création du paiement (createPayment)
+  // Si le status du paiement est PAID dès la création :
+  // Mettre à jour automatiquement payment_status de la commande via updateOrder.
+  // Réserver le stock.
+  // Si stock OK → commande SHIPPED.
+  // Gérer automatiquement les dates paid_at et shipped_at.
+  // Optimistic lock :
+  // Utiliser __v pour éviter que deux services modifient la commande en même temps.
+  // Si conflit → renvoyer 409.
+  // Dates automatiques :
+  // status → status_at (shipped_at, delivered_at, etc.)
+  // payment_status → payment_paid_at, etc.
+  // Microservices :
+  // STOCK_RESERVE_PRODUCTS → fail → rollback / exception.
+  // USER_UPDATE → ajouter orders ou payments.
+  // TypeScript safe :
+  // updatedAt et createdAt typés correctement dans OrderDocument.
   // 🔹 Update Order
+
   async updateOrder(order_id: string, update: UpdateOrderDto) {
     if (!Types.ObjectId.isValid(order_id)) {
       throw new RpcCustomException(
@@ -124,6 +167,7 @@ export class OrdersService {
     }
 
     const order = await this.orderModel.findById(order_id);
+
     if (!order) {
       throw new RpcCustomException(
         `Order with ID ${order_id} not found`,
@@ -132,28 +176,60 @@ export class OrdersService {
       );
     }
 
-    // Mettre à jour automatiquement les champs de date selon le status
+    // 🔥 1️⃣ Le paiement devient PAID ?
+    const isBecomingPaid =
+      update.payment_status === EnumPaymentsStatus.PAID &&
+      order.payment_status !== EnumPaymentsStatus.PAID;
+
+    if (isBecomingPaid) {
+      // 🔥 2️⃣ Réserver le stock dans Product MS
+      const stockResponse = await lastValueFrom(
+        this.nats.send('STOCK_RESERVE_PRODUCTS', {
+          items: order.items,
+        }),
+      );
+
+      if (!stockResponse?.success) {
+        throw new RpcCustomException(
+          'Stock reservation failed',
+          HttpStatus.CONFLICT,
+          '409',
+        );
+      }
+
+      // 🔥 3️⃣ Si stock OK → on passe en PROCESSING
+      update.status = EnumOrdersStatus.PROCESSING;
+    }
+
+    // 🔹 Dates automatiques status
     if (update.status) {
-      const statusField =
-        `${update.status.toLowerCase()}_at` as keyof UpdateOrderDto;
+      const statusField = `${update.status.toLowerCase()}_at`;
       (update as any)[statusField] = new Date();
     }
 
+    // 🔹 Dates automatiques paiement
     if (update.payment_status) {
-      const paymentField =
-        `payment_${update.payment_status.toLowerCase()}_at` as keyof UpdateOrderDto;
+      const paymentField = `${update.payment_status.toLowerCase()}_at`;
       (update as any)[paymentField] = new Date();
     }
 
-    const updatedOrder = await this.orderModel.findByIdAndUpdate(
-      order_id,
-      { $set: update },
+    // 🔒 Optimistic Lock
+    const updatedOrder = await this.orderModel.findOneAndUpdate(
+      { _id: order_id, __v: order.__v },
+      { $set: update, $inc: { __v: 1 } },
       { new: true },
     );
 
+    if (!updatedOrder) {
+      throw new RpcCustomException(
+        'Concurrent update detected',
+        HttpStatus.CONFLICT,
+        '409',
+      );
+    }
+
     return updatedOrder;
   }
-
   // 🔹 Delete Order
   async deleteOrder(order_id: string) {
     if (!Types.ObjectId.isValid(order_id)) {
