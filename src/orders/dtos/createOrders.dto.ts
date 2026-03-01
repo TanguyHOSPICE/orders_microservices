@@ -38,7 +38,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsEnum(EnumCurrency)
   currency?: EnumCurrency;
+  @IsString()
+  @IsOptional()
+  _ref?: string;
 
   @IsMongoId()
+  @IsNotEmpty()
   address_id: string; // Ref to address (microservice)
 }

@@ -50,6 +50,8 @@ export class Order {
   payment_status: EnumPaymentsStatus;
   @Prop({ enum: EnumCurrency, default: EnumCurrency.EUR })
   currency: string;
+  @Prop()
+  _ref: string;
 
   // 🏠 Ref to address  (microservice)
   @Prop({ type: String, required: true })

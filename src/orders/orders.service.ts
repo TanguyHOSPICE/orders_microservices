@@ -12,6 +12,9 @@ import {
   EnumPaymentsStatus,
 } from 'src/utils/enums/enums';
 import { UpdateOrderDto } from './dtos/updateOrders.dto';
+import { IUser } from 'src/utils/interfaces/interfaces';
+import { generateRef } from 'src/utils/functions/orderFunction';
+import { QueriesOrderDto } from './dtos/queriesOrderDto';
 
 @Injectable()
 export class OrdersService {
@@ -46,11 +49,22 @@ export class OrdersService {
   //   return transitions[current]?.includes(next);
   // }
 
-  async createOrder({ user_id, items, address_id }: CreateOrderDto) {
+  async createOrder(createOrderDto: CreateOrderDto) {
+    const { user_id, items, address_id, ...rest } = createOrderDto;
+
     // Check if user exists
-    const user = await lastValueFrom(
-      this.nats.send('USER_GET_USER_BY_ID', { _id: user_id }),
-    );
+    let user: IUser;
+    try {
+      user = await lastValueFrom(
+        this.nats.send('USER_GET_USER_BY_ID', { _id: user_id }),
+      );
+    } catch {
+      throw new RpcCustomException(
+        'Error fetching user ~ (Ord_S)',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '500',
+      );
+    }
     // console.log("🧙🏽‍♂️ ~ OrdersService ~ createOrder ~ user:", user) // ! dev tool
 
     if (!user) {
@@ -65,6 +79,13 @@ export class OrdersService {
       (acc, item) => acc + item.price * item.quantity,
       0,
     );
+    // Generate order reference
+    let orderRef = await generateRef('ORD');
+    let counter = 0;
+    while (await this.orderModel.findOne({ _ref: orderRef })) {
+      counter++;
+      orderRef = `${orderRef}-${counter}`;
+    }
     // Create a new order instance
     const newOrder = new this.orderModel({
       user_id,
@@ -74,19 +95,24 @@ export class OrdersService {
       status: EnumOrdersStatus.PENDING,
       payment_status: EnumPaymentsStatus.PENDING,
       currency: user?.currency || EnumCurrency.EUR,
+      _ref: orderRef,
+      ...rest,
     });
     // Save the order to the database
     const saveOrder = await newOrder.save();
 
     // 🔄 Update the user orders fiels with the new order id
-    await lastValueFrom(
-      this.nats.send('USER_UPDATE', {
-        _id: user_id,
-        update: { $addToSet: { orders: saveOrder._id } },
-      }),
-    );
-
-    return saveOrder;
+    try {
+      await lastValueFrom(
+        this.nats.send('USER_UPDATE', {
+          _id: user_id,
+          update: { $addToSet: { orders: saveOrder._id } },
+        }),
+      );
+      return saveOrder;
+    } catch (error) {
+      console.error('❌ Error updating user payments ~ (Ord_S) :', error);
+    }
   }
   // 🔹 Get Order by ID
   async getOrderById(order_id: string) {
@@ -112,30 +138,33 @@ export class OrdersService {
   }
 
   // 🔹 Get All Orders (optionnel par user_id)
-  async getAllOrders(user_id?: string) {
-    const filter: any = {};
-    if (user_id) {
-      if (!Types.ObjectId.isValid(user_id)) {
+  async getAllOrders(query?: QueriesOrderDto) {
+    try {
+      const filter: any = {};
+      if (query?._id) filter._id = query._id;
+      if (query?.user_id && Types.ObjectId.isValid(query.user_id)) {
+        filter.user_id = new Types.ObjectId(query.user_id);
+      }
+      if (query?._ref) filter._ref = query._ref;
+      if (query?.status) filter.status = query.status;
+      if (query?.payment_status) filter.payment_status = query.payment_status;
+      if (query?.currency) filter.currency = query.currency;
+
+      const orders = await this.orderModel.find(filter).exec();
+
+      if (!orders.length) {
         throw new RpcCustomException(
-          'Invalid User ID format',
-          HttpStatus.BAD_REQUEST,
-          '400',
+          'No orders found ~ (Ord_S)',
+          HttpStatus.NOT_FOUND,
+          '404',
         );
       }
-      filter.user_id = new Types.ObjectId(user_id);
+
+      return orders;
+    } catch (error) {
+      console.error('❌ Error in getAllOrders ~ (Ord_S) :', error);
+      throw error;
     }
-
-    const orders = await this.orderModel.find(filter).exec();
-
-    if (!orders.length) {
-      throw new RpcCustomException(
-        'No orders found',
-        HttpStatus.NOT_FOUND,
-        '404',
-      );
-    }
-
-    return orders;
   }
 
   //   Création du paiement (createPayment)
