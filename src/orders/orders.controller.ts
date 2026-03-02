@@ -33,10 +33,18 @@ export class OrdersMicroserviceController {
   }
 
   // 🔹 GET ALL (optionnellement par user_id)
+
   @MessagePattern('ORDER_GET_ALL')
-  async getAllOrders(@Payload() query: QueriesOrderDto): Promise<Order[]> {
+  async getAllOrders(
+    @Payload() query: QueriesOrderDto,
+  ): Promise<{ data: Order[]; total: number; page: number; limit: number }> {
     try {
-      return await this.ordersService.getAllOrders(query);
+      return (await this.ordersService.getAllOrders(query, true)) as {
+        data: Order[];
+        total: number;
+        page: number;
+        limit: number;
+      };
     } catch (error) {
       throw error;
     }

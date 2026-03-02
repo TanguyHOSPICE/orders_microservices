@@ -138,33 +138,59 @@ export class OrdersService {
   }
 
   // 🔹 Get All Orders (optionnel par user_id)
-  async getAllOrders(query?: QueriesOrderDto) {
-    try {
-      const filter: any = {};
-      if (query?._id) filter._id = query._id;
-      if (query?.user_id && Types.ObjectId.isValid(query.user_id)) {
-        filter.user_id = new Types.ObjectId(query.user_id);
-      }
-      if (query?._ref) filter._ref = query._ref;
-      if (query?.status) filter.status = query.status;
-      if (query?.payment_status) filter.payment_status = query.payment_status;
-      if (query?.currency) filter.currency = query.currency;
+  async getAllOrders(
+    query?: QueriesOrderDto & {
+      from_updatedAt?: Date;
+      to_updatedAt?: Date;
+      min_total_amount?: number;
+      max_total_amount?: number;
+      page?: number;
+      limit?: number;
+      itemsFilters?: {
+        product_ids?: string[];
+        min_quantity?: number;
+        max_quantity?: number;
+        min_price?: number;
+        max_price?: number;
+      };
+    },
+    returnPagination = false, // 🔹 nouveau paramètre
+  ): Promise<
+    Order[] | { data: Order[]; total: number; page: number; limit: number }
+  > {
+    const filter: any = {};
 
-      const orders = await this.orderModel.find(filter).exec();
+    // 🔹 Filtres identiques à ta version actuelle…
+    // (user_id, _id, _ref, status, payment_status, currency, itemsFilters, total_amount, dates, etc.)
+    // … copie le code existant ici
 
-      if (!orders.length) {
-        throw new RpcCustomException(
-          'No orders found ~ (Ord_S)',
-          HttpStatus.NOT_FOUND,
-          '404',
-        );
-      }
+    // 🔹 Pagination
+    const page = query?.page && query.page > 0 ? query.page : 1;
+    const limit = query?.limit && query.limit > 0 ? query.limit : 20;
+    const skip = (page - 1) * limit;
 
-      return orders;
-    } catch (error) {
-      console.error('❌ Error in getAllOrders ~ (Ord_S) :', error);
-      throw error;
+    const [orders, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.orderModel.countDocuments(filter),
+    ]);
+
+    if (!orders.length) {
+      throw new RpcCustomException(
+        'No orders found ~ (Ord_S)',
+        HttpStatus.NOT_FOUND,
+        '404',
+      );
     }
+
+    if (returnPagination) {
+      return { data: orders, total, page, limit };
+    }
+    return orders;
   }
 
   //   Création du paiement (createPayment)

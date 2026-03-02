@@ -1,4 +1,10 @@
-import { EnumOrdersStatus, EnumPaymentsStatus } from '../../utils/enums/enums';
+import {
+  EnumAddressStatus,
+  EnumAddressType,
+  EnumCurrency,
+  EnumOrdersStatus,
+  EnumPaymentsStatus,
+} from '../../utils/enums/enums';
 
 export class OrderItemResponseDto {
   product_id: string;
@@ -6,16 +12,47 @@ export class OrderItemResponseDto {
   price: number;
 }
 
+export class AddressResponseDto {
+  address_id: string;
+  full_name?: string;
+
+  street: string;
+
+  city: string;
+
+  postal_code: string;
+
+  country: string;
+
+  state?: string;
+
+  phone_number?: string;
+
+  is_default?: boolean;
+
+  type?: EnumAddressType;
+
+  status?: EnumAddressStatus;
+}
+
 export class OrderResponseDto {
   _id: string;
+  _ref: string;
+
   user_id: string;
+
   items: OrderItemResponseDto[];
+
   total_amount: number;
+  currency: EnumCurrency;
+
   status: EnumOrdersStatus;
   payment_status: EnumPaymentsStatus;
-  address_id: string;
+
+  addresses?: AddressResponseDto[];
   payment_id?: string;
-  // 🔹 Champs dates pour chaque status
+
+  // Dates status
   pending_at?: Date;
   confirmed_at?: Date;
   processing_at?: Date;
@@ -26,12 +63,13 @@ export class OrderResponseDto {
   return_requested_at?: Date;
   returned_at?: Date;
 
-  // 🔹 Paiement
+  // Paiement
   paid_at?: Date;
   payment_refunded_at?: Date;
   payment_failed_at?: Date;
 
   tracking_number?: string;
 
-  address?: any; // Ref to address (microservice)
+  createdAt: Date;
+  updatedAt: Date;
 }
