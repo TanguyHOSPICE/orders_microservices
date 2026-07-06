@@ -2,7 +2,7 @@ import {
   EnumCurrency,
   EnumOrdersStatus,
   EnumPaymentsStatus,
-} from 'src/utils/enums/enums';
+} from '../../utils/enums/enums';
 import { OrderItemDto } from './createOrders.dto';
 import {
   IsArray,

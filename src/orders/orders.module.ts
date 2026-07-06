@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { NatsClientModule } from 'src/nats-client/nats-client.module';
+import { NatsClientModule } from '../nats-client/nats-client.module';
 import { OrdersMicroserviceController } from './orders.controller';
 import { Order, OrderSchema } from './schemas/order.schema';
 

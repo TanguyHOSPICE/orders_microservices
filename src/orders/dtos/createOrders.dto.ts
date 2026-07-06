@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { EnumCurrency } from 'src/utils/enums/enums';
+import { EnumCurrency } from '../../utils/enums/enums';
 
 export class OrderItemDto {
   @IsMongoId()

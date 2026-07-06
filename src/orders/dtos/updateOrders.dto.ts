@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { OrderItemDto } from './createOrders.dto';
-import { EnumOrdersStatus, EnumPaymentsStatus } from 'src/utils/enums/enums';
+import { EnumOrdersStatus, EnumPaymentsStatus } from '../../utils/enums/enums';
 
 export class UpdateOrderDto {
   @IsNotEmpty()

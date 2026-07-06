@@ -4,16 +4,16 @@ import { Model, Types } from 'mongoose';
 import { Order } from './schemas/order.schema';
 import { ClientProxy } from '@nestjs/microservices';
 import { CreateOrderDto } from './dtos/createOrders.dto';
-import { RpcCustomException } from 'src/exceptions/rpc-custom.exception';
+import { RpcCustomException } from '../exceptions/rpc-custom.exception';
 import { lastValueFrom } from 'rxjs';
 import {
   EnumCurrency,
   EnumOrdersStatus,
   EnumPaymentsStatus,
-} from 'src/utils/enums/enums';
+} from '../utils/enums/enums';
 import { UpdateOrderDto } from './dtos/updateOrders.dto';
-import { IUser } from 'src/utils/interfaces/interfaces';
-import { generateRef } from 'src/utils/functions/orderFunction';
+import { IUser } from '../utils/interfaces/interfaces';
+import { generateRef } from '../utils/functions/orderFunction';
 import { QueriesOrderDto } from './dtos/queriesOrderDto';
 
 @Injectable()
